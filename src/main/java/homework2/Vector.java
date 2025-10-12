@@ -2,13 +2,24 @@ package main.java.homework2;
 
 import java.util.Random;
 
-public class Vector {
+interface Vector {
+    double length();
+    double dotProduct(Vector other);
+    Vector add(Vector other);
+    Vector difference(Vector other);
+    @Override
+    boolean equals(Object obj);
+    @Override
+    int hashCode();
+}
+
+class Vector3D implements Vector {
     private final double x;
     private final double y;
     private final double z;
 
     // Параметры
-    public Vector(double x, double y, double z) {
+    public Vector3D(double x, double y, double z) {
         this.x = x;
         this.y = y;
         this.z = z;
@@ -28,38 +39,43 @@ public class Vector {
     }
 
     // Вычисление длины вектора
+    @Override
     public double length() {
         return Math.sqrt(x * x + y * y + z * z);
     }
 
     // Вычисление скалярного произведения
+    @Override
     public double dotProduct(Vector other) {
-        return this.x * other.x + this.y * other.y + this.z * other.z;
+        if (!(other instanceof Vector3D)) {
+            throw new IllegalArgumentException("Операция поддерживается только для Vector3D");
+        }
+        Vector3D v = (Vector3D) other;
+        return this.x * v.x + this.y * v.y + this.z * v.z;
     }
 
     // Вычисление векторного произведения
-    public Vector crossProduct(Vector other) {
+    public Vector3D crossProduct(Vector3D other) {
         double newX = this.y * other.z - this.z * other.y;
         double newY = this.z * other.x - this.x * other.z;
         double newZ = this.x * other.y - this.y * other.x;
-        return new Vector(newX, newY, newZ);
+        return new Vector3D(newX, newY, newZ);
     }
 
     // Вычисление угла между векторами
-    public double angle(Vector other) {
+    public double angle(Vector3D other) {
         double dot = this.dotProduct(other);
         double lengths = this.length() * other.length();
         if (lengths == 0) {
             throw new IllegalArgumentException("Нельзя вычислить угол с нулевым вектором");
         }
         double cosAngle = dot / lengths;
-        // Ограничиваем значение [-1, 1] для избежания ошибок округления
         cosAngle = Math.max(-1, Math.min(1, cosAngle));
         return Math.acos(cosAngle);
     }
 
     // Вычисление косинуса угла между векторами
-    public double cosineAngle(Vector other) {
+    public double cosineAngle(Vector3D other) {
         double dot = this.dotProduct(other);
         double lengths = this.length() * other.length();
         if (lengths == 0) {
@@ -69,28 +85,23 @@ public class Vector {
     }
 
     // Сумма векторов
-    public Vector add(Vector other) {
-        return new Vector(this.x + other.x, this.y + other.y, this.z + other.z);
+    @Override
+    public Vector3D add(Vector other) {
+        if (!(other instanceof Vector3D)) {
+            throw new IllegalArgumentException("Операция поддерживается только для Vector3D");
+        }
+        Vector3D v = (Vector3D) other;
+        return new Vector3D(this.x + v.x, this.y + v.y, this.z + v.z);
     }
 
     // Разность векторов
-    public Vector difference(Vector other) {
-        return new Vector(this.x - other.x, this.y - other.y, this.z - other.z);
-    }
-
-    // Возврат массива случайных векторов
-    public static Vector[] randomizationVectors(int n) {
-        Random random = new Random();
-        Vector[] vectors = new Vector[n];
-
-        for (int i = 0; i < n; i++) {
-            double x = random.nextDouble() * 20 - 10; // случайное число от -10 до 10
-            double y = random.nextDouble() * 20 - 10;
-            double z = random.nextDouble() * 20 - 10;
-            vectors[i] = new Vector(x, y, z);
+    @Override
+    public Vector3D difference(Vector other) {
+        if (!(other instanceof Vector3D)) {
+            throw new IllegalArgumentException("Операция поддерживается только для Vector3D");
         }
-
-        return vectors;
+        Vector3D v = (Vector3D) other;
+        return new Vector3D(this.x - v.x, this.y - v.y, this.z - v.z);
     }
 
     // Формат вывода
@@ -104,7 +115,7 @@ public class Vector {
     public boolean equals(Object obj) {
         if (this == obj) return true;
         if (obj == null || getClass() != obj.getClass()) return false;
-        Vector vector3D = (Vector) obj;
+        Vector3D vector3D = (Vector3D) obj;
         return Double.compare(vector3D.x, x) == 0 &&
                 Double.compare(vector3D.y, y) == 0 &&
                 Double.compare(vector3D.z, z) == 0;
@@ -115,11 +126,34 @@ public class Vector {
     public int hashCode() {
         return java.util.Objects.hash(x, y, z);
     }
+}
 
-     public static void main(String[] args) {
+// Утилиты для векторов
+class VectorUtils {
+
+    public static Vector3D[] generateRandomVectors(int n, Random random) {
+        Vector3D[] vectors = new Vector3D[n];
+
+        for (int i = 0; i < n; i++) {
+            double x = random.nextDouble() * 20 - 10; // случайное число от -10 до 10
+            double y = random.nextDouble() * 20 - 10;
+            double z = random.nextDouble() * 20 - 10;
+            vectors[i] = new Vector3D(x, y, z);
+        }
+
+        return vectors;
+    }
+
+    public static Vector3D[] generateRandomVectors(int n) {
+        return generateRandomVectors(n, new Random());
+    }
+}
+
+class VectorDemo {
+    public static void main(String[] args) {
         // Создание векторов
-        Vector v1 = new Vector(1, 2, 3);
-        Vector v2 = new Vector(4, 5, 6);
+        Vector3D v1 = new Vector3D(1, 2, 3);
+        Vector3D v2 = new Vector3D(4, 5, 6);
 
         System.out.println("Вектор 1: " + v1);
         System.out.println("Вектор 2: " + v2);
@@ -132,7 +166,7 @@ public class Vector {
         System.out.println("Скалярное произведение: " + v1.dotProduct(v2));
 
         // Векторное произведение
-        Vector cross = v1.crossProduct(v2);
+        Vector3D cross = v1.crossProduct(v2);
         System.out.println("Векторное произведение: " + cross);
 
         // Угол между векторами
@@ -145,7 +179,7 @@ public class Vector {
 
         // Генерация случайных векторов
         System.out.println("\nСлучайные векторы:");
-        Vector[] randomVectors = randomizationVectors(3);
+        Vector3D[] randomVectors = VectorUtils.generateRandomVectors(3);
         for (int i = 0; i < randomVectors.length; i++) {
             System.out.println("Вектор " + (i + 1) + ": " + randomVectors[i]);
         }
