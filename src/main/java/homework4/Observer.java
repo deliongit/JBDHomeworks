@@ -29,7 +29,11 @@ class ObserverStringBuilder {
     }
 
     private ObserverStringBuilder mutate(Runnable mutation) {
-        mutation.run();
+        try {
+            mutation.run();
+        } catch (Exception e) {
+            System.err.println("Ошибка: " + e.getMessage());
+        }
         notifyObserver();
         return this;
     }
@@ -246,7 +250,6 @@ public class Observer {
                 }
             } catch (Exception e) {
                 System.out.println("Ошибка: " + e.getMessage());
-                scanner.nextLine();
             }
         }
     }
@@ -328,7 +331,6 @@ public class Observer {
                 }
             } catch (Exception e) {
                 System.out.println("Ошибка: " + e.getMessage());
-                scanner.nextLine();
             }
         }
     }
